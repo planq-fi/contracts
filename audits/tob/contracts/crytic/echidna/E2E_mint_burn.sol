@@ -4,22 +4,22 @@ pragma abicoder v2;
 import './Setup.sol';
 import '../../../../../contracts/test/TestERC20.sol';
 import '../../../../../contracts/libraries/TickMath.sol';
-import '../../../../../contracts/UniswapV3Pool.sol';
+import '../../../../../contracts/PlanqFiPool.sol';
 import '../../../../../contracts/libraries/Position.sol';
 
 // import 'hardhat/console.sol';
 
 contract E2E_mint_burn {
     SetupTokens tokens;
-    SetupUniswap uniswap;
+    SetupPlanqFi planqFi;
 
-    UniswapV3Pool pool;
+    PlanqFiPool pool;
 
     TestERC20 token0;
     TestERC20 token1;
 
-    UniswapMinter minter;
-    UniswapSwapper swapper;
+    PlanqFiMinter minter;
+    PlanqFiSwapper swapper;
 
     int24[] usedTicks;
     bool inited;
@@ -50,10 +50,10 @@ contract E2E_mint_burn {
         token0 = tokens.token0();
         token1 = tokens.token1();
 
-        uniswap = new SetupUniswap(token0, token1);
+        planqFi = new SetupPlanqFi(token0, token1);
 
-        minter = new UniswapMinter(token0, token1);
-        swapper = new UniswapSwapper(token0, token1);
+        minter = new PlanqFiMinter(token0, token1);
+        swapper = new PlanqFiSwapper(token0, token1);
 
         tokens.mintTo(0, address(minter), 1e10 ether);
         tokens.mintTo(1, address(minter), 1e10 ether);
@@ -202,8 +202,8 @@ contract E2E_mint_burn {
     function check_mint_invariants(
         int24 _tickLower,
         int24 _tickUpper,
-        UniswapMinter.MinterStats memory bfre,
-        UniswapMinter.MinterStats memory aftr
+        PlanqFiMinter.MinterStats memory bfre,
+        PlanqFiMinter.MinterStats memory aftr
     ) internal {
         (, int24 currentTick, , , , , ) = pool.slot0();
 
@@ -232,8 +232,8 @@ contract E2E_mint_burn {
         int24 _tickLower,
         int24 _tickUpper,
         uint128 _newPosAmount,
-        UniswapMinter.MinterStats memory bfre,
-        UniswapMinter.MinterStats memory aftr
+        PlanqFiMinter.MinterStats memory bfre,
+        PlanqFiMinter.MinterStats memory aftr
     ) internal {
         (, int24 currentTick, , , , , ) = pool.slot0();
 
@@ -363,8 +363,8 @@ contract E2E_mint_burn {
         //
         // deploy the pool
         //
-        uniswap.createPool(poolParams.fee, poolParams.startPrice);
-        pool = uniswap.pool();
+        planqFi.createPool(poolParams.fee, poolParams.startPrice);
+        pool = planqFi.pool();
 
         //
         // set the pool inside the minter and swapper contracts
@@ -385,7 +385,7 @@ contract E2E_mint_burn {
         (int24 _tL, int24 _tU) =
             forgePosition(_amount, poolParams.tickSpacing, poolParams.tickCount, poolParams.maxTick);
 
-        (UniswapMinter.MinterStats memory bfre, UniswapMinter.MinterStats memory aftr) =
+        (PlanqFiMinter.MinterStats memory bfre, PlanqFiMinter.MinterStats memory aftr) =
             minter.doMint(_tL, _tU, _amount);
         storeUsedTicks(_tL, _tU);
 
@@ -420,12 +420,12 @@ contract E2E_mint_burn {
         // console.log('burn amount = %s', burnAmount);
         PoolPosition storage pos = positions[posIdx];
 
-        UniswapMinter.MinterStats memory bfre;
-        UniswapMinter.MinterStats memory aftr;
+        PlanqFiMinter.MinterStats memory bfre;
+        PlanqFiMinter.MinterStats memory aftr;
 
         try minter.doBurn(pos.tickLower, pos.tickUpper, burnAmount) returns (
-            UniswapMinter.MinterStats memory bfre_burn,
-            UniswapMinter.MinterStats memory aftr_burn
+            PlanqFiMinter.MinterStats memory bfre_burn,
+            PlanqFiMinter.MinterStats memory aftr_burn
         ) {
             bfre = bfre_burn;
             aftr = aftr_burn;
@@ -450,12 +450,12 @@ contract E2E_mint_burn {
         // console.log('burn posIdx = %s', posIdx);
         PoolPosition storage pos = positions[posIdx];
 
-        UniswapMinter.MinterStats memory bfre;
-        UniswapMinter.MinterStats memory aftr;
+        PlanqFiMinter.MinterStats memory bfre;
+        PlanqFiMinter.MinterStats memory aftr;
 
         try minter.doBurn(pos.tickLower, pos.tickUpper, pos.amount) returns (
-            UniswapMinter.MinterStats memory bfre_burn,
-            UniswapMinter.MinterStats memory aftr_burn
+            PlanqFiMinter.MinterStats memory bfre_burn,
+            PlanqFiMinter.MinterStats memory aftr_burn
         ) {
             bfre = bfre_burn;
             aftr = aftr_burn;
@@ -480,12 +480,12 @@ contract E2E_mint_burn {
         // console.log('burn posIdx = %s', posIdx);
         PoolPosition storage pos = positions[posIdx];
 
-        UniswapMinter.MinterStats memory bfre;
-        UniswapMinter.MinterStats memory aftr;
+        PlanqFiMinter.MinterStats memory bfre;
+        PlanqFiMinter.MinterStats memory aftr;
 
         try minter.doBurn(pos.tickLower, pos.tickUpper, 0) returns (
-            UniswapMinter.MinterStats memory bfre_burn,
-            UniswapMinter.MinterStats memory aftr_burn
+            PlanqFiMinter.MinterStats memory bfre_burn,
+            PlanqFiMinter.MinterStats memory aftr_burn
         ) {
             bfre = bfre_burn;
             aftr = aftr_burn;
